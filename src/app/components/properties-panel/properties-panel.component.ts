@@ -4,7 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { EventBusService } from '../../core/services/event-bus.service';
 import { HeatmapService } from '../../core/services/heatmap.service';
 import { Vector3 } from '@babylonjs/core';
-import { SensorType, EventType, HeatmapVisibilityChangedPayload, HeatmapModeChangedPayload } from '../../core/models/types.model';
+import {
+  SensorType,
+  EventType,
+  HeatmapVisibilityChangedPayload,
+  HeatmapModeChangedPayload,
+} from '../../core/models/types.model';
 
 interface LayerState {
   floor1: boolean;
@@ -30,7 +35,7 @@ interface SelectionProperties {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './properties-panel.component.html',
-  styleUrls: ['./properties-panel.component.scss']
+  styleUrls: ['./properties-panel.component.scss'],
 })
 export class PropertiesPanelComponent implements OnInit {
   private eventBus = inject(EventBusService);
@@ -47,14 +52,14 @@ export class PropertiesPanelComponent implements OnInit {
   // Global Properties - Layers
   layers = signal<LayerState>({
     floor1: true,
-    floor2: true
+    floor2: true,
   });
 
   // Global Properties - Tags
   tags = signal<TagState>({
     architecture: true,
     systems: true,
-    forniture: true
+    forniture: true,
   });
 
   // Global Properties - Heatmap
@@ -65,28 +70,35 @@ export class PropertiesPanelComponent implements OnInit {
   selectionProperties = signal<SelectionProperties>({
     object: 'Wall',
     material: 'Concrete',
-    attenuationIndex: 0.5
+    attenuationIndex: 0.5,
   });
 
   // Material options for dropdown
   materialOptions = ['Concrete', 'Wood', 'Metal', 'Glass', 'Brick'];
 
-
+  // Nella funzione ngOnInit(), modifica questa sezione:
 
   ngOnInit(): void {
-    this.eventBus.meshClicked$.subscribe(payload => {
+    this.eventBus.meshClicked$.subscribe((payload) => {
       console.log('[PropertiesPanel] meshClicked received:', payload);
-      this.activeMesh.set({ name: payload.meshName, position: payload.position, normal: payload.normal });
-      // Reset visibility to true when a new mesh is selected
+      this.activeMesh.set({
+        name: payload.meshName,
+        position: payload.position,
+        normal: payload.normal,
+      });
       this.meshVisible.set(true);
 
-      // Check if it's a sensor (case insensitive)
+      // Check if it's a sensor
       const sensorTypes = ['proximity_', 'motion_', 'temperature_', 'camera_'];
-      const isSensor = sensorTypes.some(type => payload.meshName.toLowerCase().startsWith(type));
-      console.log('[PropertiesPanel] isSensor check:', { meshName: payload.meshName, isSensor, sensorTypes });
+      const isSensor = sensorTypes.some((type) => payload.meshName.toLowerCase().startsWith(type));
+      console.log('[PropertiesPanel] isSensor check:', {
+        meshName: payload.meshName,
+        isSensor,
+        sensorTypes,
+      });
 
       if (isSensor) {
-        const sensorId = payload.meshName; // The full name is the sensor ID
+        const sensorId = payload.meshName;
         console.log('[PropertiesPanel] Looking for sensor with ID:', sensorId);
         const sensor = this.heatmapService.getSensor(sensorId);
         console.log('[PropertiesPanel] Sensor found:', sensor);
@@ -95,7 +107,7 @@ export class PropertiesPanelComponent implements OnInit {
           this.selectedSensor.set({
             id: sensorId,
             intensity: sensor.intensity * 100, // Convert to 0-100
-            battery: sensor.battery * 100   // Convert to 0-100
+            battery: sensor.intensity * 100, // STESSA intensità per entrambi
           });
           console.log('[PropertiesPanel] selectedSensor set:', this.selectedSensor());
         } else {
@@ -108,27 +120,25 @@ export class PropertiesPanelComponent implements OnInit {
       }
     });
 
-    // --- MODIFICA ---
     // Emetti lo stato iniziale per sincronizzare il servizio heatmap
     this.eventBus.emitHeatmapVisibilityChanged({ visible: this.heatmapVisible() });
     this.eventBus.emitHeatmapModeChanged({ mode: this.heatmapMode() });
-    // --- FINE MODIFICA ---
   }
 
   // Layer toggle handlers
   onLayerToggle(layer: keyof LayerState, checked: boolean): void {
-    this.layers.update(current => ({
+    this.layers.update((current) => ({
       ...current,
-      [layer]: checked
+      [layer]: checked,
     }));
     console.log(`Layer ${layer} toggled:`, checked);
   }
 
   // Tag toggle handlers
   onTagToggle(tag: keyof TagState, checked: boolean): void {
-    this.tags.update(current => ({
+    this.tags.update((current) => ({
       ...current,
-      [tag]: checked
+      [tag]: checked,
     }));
     console.log(`Tag ${tag} toggled:`, checked);
   }
@@ -147,25 +157,25 @@ export class PropertiesPanelComponent implements OnInit {
 
   // Selection properties change handlers
   onObjectChange(value: string): void {
-    this.selectionProperties.update(current => ({
+    this.selectionProperties.update((current) => ({
       ...current,
-      object: value
+      object: value,
     }));
     console.log('Object changed:', value);
   }
 
   onMaterialChange(value: string): void {
-    this.selectionProperties.update(current => ({
+    this.selectionProperties.update((current) => ({
       ...current,
-      material: value
+      material: value,
     }));
     console.log('Material changed:', value);
   }
 
   onAttenuationChange(value: number): void {
-    this.selectionProperties.update(current => ({
+    this.selectionProperties.update((current) => ({
       ...current,
-      attenuationIndex: value
+      attenuationIndex: value,
     }));
     console.log('Attenuation index changed:', value);
   }
@@ -175,17 +185,27 @@ export class PropertiesPanelComponent implements OnInit {
     const sensor = this.selectedSensor();
     if (sensor) {
       const normalizedValue = value / 100; // Convert from 0-100 to 0-1
+
+      // Aggiorna sia la UI che il servizio heatmap
       this.heatmapService.updateSensor(sensor.id, { intensity: normalizedValue });
-      this.selectedSensor.update(current => current ? { ...current, intensity: value } : null);
+      this.selectedSensor.update((current) => (current ? { ...current, intensity: value } : null));
+
+      console.log(`[PropertiesPanel] Sensor ${sensor.id} intensity changed to: ${normalizedValue}`);
     }
   }
 
   onSensorBatteryChange(value: number): void {
     const sensor = this.selectedSensor();
     if (sensor) {
-      const normalizedValue = value / 100; // Convert from 0-100 to 0-1
-      this.heatmapService.updateSensor(sensor.id, { battery: normalizedValue });
-      this.selectedSensor.update(current => current ? { ...current, battery: value } : null);
+      // In modalità battery, aggiorna l'intensity (NON un campo separato)
+      const normalizedValue = value / 100;
+
+      this.heatmapService.updateSensor(sensor.id, { intensity: normalizedValue });
+      this.selectedSensor.update((current) => (current ? { ...current, battery: value } : null));
+
+      console.log(
+        `[PropertiesPanel] Sensor ${sensor.id} battery level changed to: ${normalizedValue}`
+      );
     }
   }
 
@@ -197,7 +217,7 @@ export class PropertiesPanelComponent implements OnInit {
       this.eventBus.emitMeshVisibilityChanged({
         meshName,
         visible: checked,
-        source: 'properties_panel'
+        source: 'properties_panel',
       });
       console.log(`Mesh ${meshName} visibility changed to:`, checked);
     }
@@ -207,12 +227,6 @@ export class PropertiesPanelComponent implements OnInit {
   parseFloat(value: string): number {
     return parseFloat(value);
   }
-
-
-
-
-
-
 
   // Model import handlers
   onImportButtonClick(): void {
@@ -249,7 +263,7 @@ export class PropertiesPanelComponent implements OnInit {
       // Emit event to load the model
       this.eventBus.emitModelImportRequested({
         file,
-        source: 'properties_panel'
+        source: 'properties_panel',
       });
 
       // Reset input so the same file can be selected again
@@ -264,9 +278,8 @@ export class PropertiesPanelComponent implements OnInit {
     this.eventBus.emitPanelVisibilityChanged({
       panelName: 'properties',
       visible: false,
-      source: 'properties_panel'
+      source: 'properties_panel',
     });
     console.log('Properties panel closed');
   }
-
 }
