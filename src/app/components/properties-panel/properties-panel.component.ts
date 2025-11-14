@@ -180,14 +180,17 @@ export class PropertiesPanelComponent implements OnInit {
     console.log('Attenuation index changed:', value);
   }
 
-  // Sensor property change handlers
+  // In properties-panel.component.ts
+
   onSensorIntensityChange(value: number): void {
     const sensor = this.selectedSensor();
     if (sensor) {
       const normalizedValue = value / 100; // Convert from 0-100 to 0-1
 
-      // Aggiorna sia la UI che il servizio heatmap
+      // IMPORTANTE: Aggiorna l'heatmap service prima di aggiornare la UI
       this.heatmapService.updateSensor(sensor.id, { intensity: normalizedValue });
+
+      // Poi aggiorna la UI
       this.selectedSensor.update((current) => (current ? { ...current, intensity: value } : null));
 
       console.log(`[PropertiesPanel] Sensor ${sensor.id} intensity changed to: ${normalizedValue}`);
@@ -200,7 +203,10 @@ export class PropertiesPanelComponent implements OnInit {
       // In modalità battery, aggiorna l'intensity (NON un campo separato)
       const normalizedValue = value / 100;
 
+      // Aggiorna heatmap service
       this.heatmapService.updateSensor(sensor.id, { intensity: normalizedValue });
+
+      // Aggiorna UI
       this.selectedSensor.update((current) => (current ? { ...current, battery: value } : null));
 
       console.log(
