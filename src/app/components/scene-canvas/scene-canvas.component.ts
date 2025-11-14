@@ -20,6 +20,7 @@ import { EngineConfig } from '../../core/models/types.model';
 import { SceneManager } from '../../core/engine/scene-manager';
 import { EventBusService } from '../../core/services/event-bus.service';
 import { LoggerService } from '../../core/services/logger.service';
+import { HeatmapService } from '../../core/services/heatmap.service';
 
 @Component({
   selector: 'app-scene-canvas',
@@ -42,7 +43,8 @@ export class SceneCanvasComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private eventBus: EventBusService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private heatmapService: HeatmapService
   ) {}
 
   ngAfterViewInit(): void {
@@ -79,7 +81,7 @@ export class SceneCanvasComponent implements AfterViewInit, OnDestroy {
       console.log(' Canvas size:', this.canvasRef.nativeElement.clientWidth, 'x', this.canvasRef.nativeElement.clientHeight);
 
       // Create new SceneManager instance
-      this.sceneManager = new SceneManager(this.eventBus, this.logger);
+      this.sceneManager = new SceneManager(this.eventBus, this.logger, this.heatmapService);
 
       // Initialize the scene
       await this.sceneManager.initialize(this.canvasRef.nativeElement, this.engineConfig);

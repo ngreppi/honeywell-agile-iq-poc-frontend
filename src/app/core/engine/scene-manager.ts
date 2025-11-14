@@ -27,9 +27,10 @@ import {
 import { AdvancedDynamicTexture, TextBlock, Control } from '@babylonjs/gui';
 import '@babylonjs/loaders/glTF/2.0';
 
-import { EventType, EngineConfig, RotationChangedPayload, PositionChangedPayload, SceneReadyPayload, MeshClickedPayload, MeshVisibilityChangedPayload, ModelImportRequestedPayload, SensorType, SensorCreationRequestedPayload, SensorInfo, SensorCreatedPayload, SensorLinkRequestedPayload, SensorInsertionModeChangedPayload, SensorLinkModeChangedPayload, SensorLinkType, SensorDistanceModeChangedPayload, SensorDistanceCalculatedPayload } from '../models/types.model';
+import { EventType, EngineConfig, RotationChangedPayload, PositionChangedPayload, SceneReadyPayload, MeshClickedPayload, MeshVisibilityChangedPayload, ModelImportRequestedPayload, SensorType, SensorCreationRequestedPayload, SensorInfo, SensorCreatedPayload, SensorLinkRequestedPayload, SensorInsertionModeChangedPayload, SensorLinkModeChangedPayload, SensorLinkType, SensorDistanceModeChangedPayload, SensorDistanceCalculatedPayload, HeatmapVisibilityChangedPayload, HeatmapModeChangedPayload } from '../models/types.model';
 import { EventBusService } from '../services/event-bus.service';
 import { LoggerService } from '../services/logger.service';
+import { HeatmapService } from '../services/heatmap.service';
 import { getSensorConfig } from '../models/sensor-configs';
 import { environment } from '../../../environments/environment';
 
@@ -102,7 +103,8 @@ export class SceneManager {
 
   constructor(
     private eventBus: EventBusService,
-    private logger: LoggerService
+    private logger: LoggerService,
+    private heatmapService: HeatmapService
   ) { }
 
   // ================================
@@ -141,6 +143,9 @@ export class SceneManager {
 
       // Enable multiple active cameras for rendering axes in separate viewport
       this.scene.activeCameras = [];
+
+      // Initialize heatmap service
+      this.heatmapService.initialize(this.scene);
 
       // Setup scene (camera, lights, objects)
       await this.setupScene();
@@ -252,6 +257,11 @@ export class SceneManager {
         console.error('Failed to load default model:', error);
       });
     }
+
+    // Register heatmap render loop
+    this.scene.registerBeforeRender(() => {
+      this.heatmapService.render();
+    });
   }
 
   /**
@@ -2001,6 +2011,9 @@ export class SceneManager {
     // Clear click vs drag tracking
     this.pointerDownPosition = null;
     this.hasMouseMoved = false;
+
+    // Dispose heatmap service
+    this.heatmapService.dispose();
 
     this.isInitialized = false;
     this.isDisposed = true;

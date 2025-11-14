@@ -196,6 +196,51 @@
           (input)="onAttenuationChange(parseFloat($any($event.target).value))"
         />
       </div>
+
+      <!-- Sensor Properties (only shown when a sensor is selected) -->
+      @if (selectedSensor()) {
+      <div class="subsection">
+        <h4 class="subsection-title">Sensor Properties</h4>
+
+        <!-- Sensor ID -->
+        <div class="input-group">
+          <label class="input-label">Sensor ID</label>
+          <p class="sensor-id">{{ selectedSensor()?.id }}</p>
+        </div>
+
+        <!-- Signal Intensity Slider -->
+        <div class="input-group">
+          <label class="input-label" for="intensity-slider">Signal Intensity</label>
+          <input
+            id="intensity-slider"
+            type="range"
+            class="slider-input"
+            min="0"
+            max="100"
+            step="1"
+            [value]="selectedSensor()?.intensity"
+            (input)="onSensorIntensityChange(parseFloat($any($event.target).value))"
+          />
+          <span class="slider-value">{{ selectedSensor()?.intensity }}%</span>
+        </div>
+
+        <!-- Battery Level Slider -->
+        <div class="input-group">
+          <label class="input-label" for="battery-slider">Battery Level</label>
+          <input
+            id="battery-slider"
+            type="range"
+            class="slider-input"
+            min="0"
+            max="100"
+            step="1"
+            [value]="selectedSensor()?.battery"
+            (input)="onSensorBatteryChange(parseFloat($any($event.target).value))"
+          />
+          <span class="slider-value">{{ selectedSensor()?.battery }}%</span>
+        </div>
+      </div>
+      }
     </div>
     
   </div>

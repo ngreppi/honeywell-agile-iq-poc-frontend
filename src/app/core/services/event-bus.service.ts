@@ -26,7 +26,9 @@ import {
   SensorLinkModeChangedPayload,
   SensorDistanceModeChangedPayload,
   SensorDistanceCalculatedPayload,
-  PanelVisibilityChangedPayload
+  PanelVisibilityChangedPayload,
+  HeatmapVisibilityChangedPayload,
+  HeatmapModeChangedPayload
 } from '../models/types.model';
 import { Command } from '../models/command.model';
 import { CommandResult } from '../models/types.model';
@@ -61,6 +63,8 @@ export class EventBusService {
   private readonly sensorDistanceModeChangedSubject = new Subject<SensorDistanceModeChangedPayload>();
   private readonly sensorDistanceCalculatedSubject = new Subject<SensorDistanceCalculatedPayload>();
   private readonly panelVisibilityChangedSubject = new Subject<PanelVisibilityChangedPayload>();
+  private readonly heatmapVisibilityChangedSubject = new Subject<HeatmapVisibilityChangedPayload>();
+  private readonly heatmapModeChangedSubject = new Subject<HeatmapModeChangedPayload>();
 
   // Command execution events
   private readonly commandExecutedSubject = new Subject<{ command: Command; result: CommandResult }>();
@@ -85,6 +89,8 @@ export class EventBusService {
   public readonly sensorDistanceModeChanged$: Observable<SensorDistanceModeChangedPayload> = this.sensorDistanceModeChangedSubject.asObservable();
   public readonly sensorDistanceCalculated$: Observable<SensorDistanceCalculatedPayload> = this.sensorDistanceCalculatedSubject.asObservable();
   public readonly panelVisibilityChanged$: Observable<PanelVisibilityChangedPayload> = this.panelVisibilityChangedSubject.asObservable();
+  public readonly heatmapVisibilityChanged$: Observable<HeatmapVisibilityChangedPayload> = this.heatmapVisibilityChangedSubject.asObservable();
+  public readonly heatmapModeChanged$: Observable<HeatmapModeChangedPayload> = this.heatmapModeChangedSubject.asObservable();
   public readonly commandExecuted$: Observable<{ command: Command; result: CommandResult }> = this.commandExecutedSubject.asObservable();
   public readonly error$: Observable<{ error: Error; context: string }> = this.errorSubject.asObservable();
 
@@ -294,6 +300,30 @@ export class EventBusService {
   }
 
   /**
+   * Emit a heatmap visibility changed event
+   */
+  emitHeatmapVisibilityChanged(payload: Omit<HeatmapVisibilityChangedPayload, 'timestamp'>): void {
+    const fullPayload: HeatmapVisibilityChangedPayload = {
+      ...payload,
+      timestamp: Date.now()
+    };
+    this.addToHistory(EventType.HEATMAP_VISIBILITY_CHANGED, fullPayload, false);
+    this.heatmapVisibilityChangedSubject.next(fullPayload);
+  }
+
+  /**
+   * Emit a heatmap mode changed event
+   */
+  emitHeatmapModeChanged(payload: Omit<HeatmapModeChangedPayload, 'timestamp'>): void {
+    const fullPayload: HeatmapModeChangedPayload = {
+      ...payload,
+      timestamp: Date.now()
+    };
+    this.addToHistory(EventType.HEATMAP_MODE_CHANGED, fullPayload, false);
+    this.heatmapModeChangedSubject.next(fullPayload);
+  }
+
+  /**
    * Emit a command executed event
    */
   emitCommandExecuted(command: Command, result: CommandResult): void {
@@ -360,6 +390,12 @@ export class EventBusService {
         break;
       case EventType.PANEL_VISIBILITY_CHANGED:
         this.panelVisibilityChangedSubject.next(payload.payload || payload);
+        break;
+      case EventType.HEATMAP_VISIBILITY_CHANGED:
+        this.heatmapVisibilityChangedSubject.next(payload.payload || payload);
+        break;
+      case EventType.HEATMAP_MODE_CHANGED:
+        this.heatmapModeChangedSubject.next(payload.payload || payload);
         break;
       case 'bus:commandExecuted':
         this.commandExecutedSubject.next(payload);
@@ -456,6 +492,8 @@ export class EventBusService {
     this.sensorDistanceModeChangedSubject.complete();
     this.sensorDistanceCalculatedSubject.complete();
     this.panelVisibilityChangedSubject.complete();
+    this.heatmapVisibilityChangedSubject.complete();
+    this.heatmapModeChangedSubject.complete();
     this.commandExecutedSubject.complete();
     this.errorSubject.complete();
   }

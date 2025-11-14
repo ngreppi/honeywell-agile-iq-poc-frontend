@@ -2,8 +2,9 @@ import { Component, inject, OnInit, signal, ElementRef, ViewChild } from '@angul
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventBusService } from '../../core/services/event-bus.service';
+import { HeatmapService } from '../../core/services/heatmap.service';
 import { Vector3 } from '@babylonjs/core';
-import { SensorType } from '../../core/models/types.model';
+import { SensorType, EventType, HeatmapVisibilityChangedPayload, HeatmapModeChangedPayload } from '../../core/models/types.model';
 
 interface LayerState {
   floor1: boolean;
@@ -33,9 +34,13 @@ interface SelectionProperties {
 })
 export class PropertiesPanelComponent implements OnInit {
   private eventBus = inject(EventBusService);
+  private heatmapService = inject(HeatmapService);
   activeMesh = signal<{ name: string; position: Vector3; normal?: Vector3 } | null>(null);
   meshVisible = signal<boolean>(true);
   isVisible = signal<boolean>(true);
+
+  // Sensor properties (only shown when a sensor is selected)
+  selectedSensor = signal<{ id: string; intensity: number; battery: number } | null>(null);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -70,9 +75,37 @@ export class PropertiesPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.eventBus.meshClicked$.subscribe(payload => {
+      console.log('[PropertiesPanel] meshClicked received:', payload);
       this.activeMesh.set({ name: payload.meshName, position: payload.position, normal: payload.normal });
       // Reset visibility to true when a new mesh is selected
       this.meshVisible.set(true);
+
+      // Check if it's a sensor (case insensitive)
+      const sensorTypes = ['proximity_', 'motion_', 'temperature_', 'camera_'];
+      const isSensor = sensorTypes.some(type => payload.meshName.toLowerCase().startsWith(type));
+      console.log('[PropertiesPanel] isSensor check:', { meshName: payload.meshName, isSensor, sensorTypes });
+
+      if (isSensor) {
+        const sensorId = payload.meshName; // The full name is the sensor ID
+        console.log('[PropertiesPanel] Looking for sensor with ID:', sensorId);
+        const sensor = this.heatmapService.getSensor(sensorId);
+        console.log('[PropertiesPanel] Sensor found:', sensor);
+
+        if (sensor) {
+          this.selectedSensor.set({
+            id: sensorId,
+            intensity: sensor.intensity * 100, // Convert to 0-100
+            battery: sensor.battery * 100   // Convert to 0-100
+          });
+          console.log('[PropertiesPanel] selectedSensor set:', this.selectedSensor());
+        } else {
+          console.log('[PropertiesPanel] Sensor not found in heatmapService');
+          this.selectedSensor.set(null);
+        }
+      } else {
+        console.log('[PropertiesPanel] Not a sensor, clearing selectedSensor');
+        this.selectedSensor.set(null);
+      }
     });
   }
 
@@ -97,13 +130,13 @@ export class PropertiesPanelComponent implements OnInit {
   // Heatmap mode change handler
   onHeatmapModeChange(mode: HeatmapMode): void {
     this.heatmapMode.set(mode);
-    console.log('Heatmap mode changed:', mode);
+    this.eventBus.emitHeatmapModeChanged({ mode });
   }
 
   // Heatmap visibility toggle handler
   onHeatmapVisibilityToggle(checked: boolean): void {
     this.heatmapVisible.set(checked);
-    console.log('Heatmap visibility changed:', checked);
+    this.eventBus.emitHeatmapVisibilityChanged({ visible: checked });
   }
 
   // Selection properties change handlers
@@ -129,6 +162,25 @@ export class PropertiesPanelComponent implements OnInit {
       attenuationIndex: value
     }));
     console.log('Attenuation index changed:', value);
+  }
+
+  // Sensor property change handlers
+  onSensorIntensityChange(value: number): void {
+    const sensor = this.selectedSensor();
+    if (sensor) {
+      const normalizedValue = value / 100; // Convert from 0-100 to 0-1
+      this.heatmapService.updateSensor(sensor.id, { intensity: normalizedValue });
+      this.selectedSensor.update(current => current ? { ...current, intensity: value } : null);
+    }
+  }
+
+  onSensorBatteryChange(value: number): void {
+    const sensor = this.selectedSensor();
+    if (sensor) {
+      const normalizedValue = value / 100; // Convert from 0-100 to 0-1
+      this.heatmapService.updateSensor(sensor.id, { battery: normalizedValue });
+      this.selectedSensor.update(current => current ? { ...current, battery: value } : null);
+    }
   }
 
   // Visibility toggle handler

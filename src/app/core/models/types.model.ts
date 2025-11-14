@@ -96,7 +96,9 @@ export enum EventType {
   SENSOR_LINK_MODE_CHANGED = 'evt:sensorLinkModeChanged',
   SENSOR_DISTANCE_MODE_CHANGED = 'evt:sensorDistanceModeChanged',
   SENSOR_DISTANCE_CALCULATED = 'evt:sensorDistanceCalculated',
-  PANEL_VISIBILITY_CHANGED = 'evt:panelVisibilityChanged'
+  PANEL_VISIBILITY_CHANGED = 'evt:panelVisibilityChanged',
+  HEATMAP_VISIBILITY_CHANGED = 'evt:heatmapVisibilityChanged',
+  HEATMAP_MODE_CHANGED = 'evt:heatmapModeChanged'
 }
 
 /**
@@ -312,7 +314,9 @@ export type EventPayload =
   | SensorLinkModeChangedPayload
   | SensorDistanceModeChangedPayload
   | SensorDistanceCalculatedPayload
-  | PanelVisibilityChangedPayload;
+  | PanelVisibilityChangedPayload
+  | HeatmapVisibilityChangedPayload
+  | HeatmapModeChangedPayload;
 
 // ================================
 // CONFIGURATION TYPES
@@ -359,5 +363,47 @@ export interface AppState {
   sceneReady: boolean;
   currentMesh?: Mesh;
   eventHistory: EventPayload[];
+}
+
+// ================================
+// HEATMAP TYPES
+// ================================
+
+/**
+ * Heatmap mode types
+ */
+export type HeatmapMode = 'signal' | 'battery';
+
+/**
+ * Color stop for heatmap gradient
+ */
+export interface ColorStop {
+  value: number; // 0-1
+  color: string; // hex color
+}
+
+/**
+ * Heatmap configuration
+ */
+export interface HeatmapConfig {
+  mode: HeatmapMode;
+  visible: boolean;
+  colorStops?: ColorStop[];
+  defaultRadius?: number;
+  textureSize?: number;
+}
+
+/**
+ * Payload for heatmap visibility changed events
+ */
+export interface HeatmapVisibilityChangedPayload extends BaseEventPayload {
+  visible: boolean;
+}
+
+/**
+ * Payload for heatmap mode changed events
+ */
+export interface HeatmapModeChangedPayload extends BaseEventPayload {
+  mode: HeatmapMode;
 }
 
