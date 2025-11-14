@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Scene, Vector3, AbstractMesh, DynamicTexture, StandardMaterial, Color3, Ray } from '@babylonjs/core';
+import { Scene, Vector3, AbstractMesh, DynamicTexture, StandardMaterial, Color3, Ray, Material } from '@babylonjs/core'; // Importa Material
 import { EventBusService } from './event-bus.service';
 import { LoggerService } from './logger.service';
 import { HeatmapConfig, HeatmapMode, ColorStop, EventType, HeatmapVisibilityChangedPayload, HeatmapModeChangedPayload, SensorCreatedPayload, SensorLinkRequestedPayload } from '../models/types.model';
@@ -16,6 +16,7 @@ interface Sensor {
   radius: number;
   enabled: boolean;
   attachedMesh?: AbstractMesh;
+  normal?: Vector3; // --- MODIFICA --- (Fix 3: Aggiunto per proiezione)
 }
 
 interface Link {
@@ -139,6 +140,7 @@ class BatteryStrategy extends BaseHeatmapStrategy {
     if (distance > sensor.radius) return 0;
 
     const distanceFactor = 1 - Math.pow(distance / sensor.radius, 2);
+    // --- MODIFICA --- (Fix 2: Usa 'battery' come input, non 'intensity')
     const effective = this.effectiveIntensityCache.get(sensor.id) ?? sensor.battery;
     return effective * distanceFactor;
   }
@@ -149,6 +151,7 @@ class BatteryStrategy extends BaseHeatmapStrategy {
     const maxIterations = 5;
     const currentValues = new Map<string, number>();
     for (const s of context.sensors) {
+        // --- MODIFICA --- (Fix 2: Usa 'battery' come input, non 'intensity')
       const base = s.enabled ? s.battery : 0;
       currentValues.set(s.id, base);
       this.effectiveIntensityCache.set(s.id, base);
@@ -172,6 +175,7 @@ class BatteryStrategy extends BaseHeatmapStrategy {
           else if (link.sensorB === s.id) neighbors.push(link.sensorA);
         }
 
+        // --- MODIFICA --- (Fix 2: Usa 'battery' come input, non 'intensity')
         let sum = s.battery;
         let count = 1;
 
@@ -297,7 +301,13 @@ export class HeatmapService {
   private sensors: Map<string, Sensor> = new Map();
   private links: Map<string, Link> = new Map();
   private attenuators: Map<string, AttenuationPoint> = new Map();
-  private targetMeshes: Map<string, { mesh: AbstractMesh; shaderManager: ShaderManager }> = new Map();
+  
+  // --- MODIFICA --- (Fix 1: Salva anche l'originalMaterial)
+  private targetMeshes: Map<string, { mesh: AbstractMesh; shaderManager: ShaderManager; originalMaterial: Material | null }> = new Map();
+
+  // --- MODIFICA --- (Fix 2: Istanziamo le strategie per mantenerne lo stato)
+  private signalStrategy: HeatmapStrategy = new SignalStrategy();
+  private batteryStrategy: HeatmapStrategy = new BatteryStrategy();
 
   private config: Required<HeatmapConfig> = {
     mode: 'signal',
@@ -337,7 +347,8 @@ export class HeatmapService {
     return this.sensors.get(id);
   }
 
-  addSensor(id: string, position: Vector3, options?: { intensity?: number; battery?: number; radius?: number; attachedMesh?: AbstractMesh }): void {
+  // --- MODIFICA --- (Fix 3: Accetta e memorizza il 'normal')
+  addSensor(id: string, position: Vector3, options?: { intensity?: number; battery?: number; radius?: number; attachedMesh?: AbstractMesh; normal?: Vector3 }): void {
     const sensor: Sensor = {
       id,
       position: position.clone(),
@@ -345,7 +356,8 @@ export class HeatmapService {
       battery: options?.battery ?? 1,
       radius: options?.radius ?? this.config.defaultRadius,
       enabled: true,
-      attachedMesh: options?.attachedMesh
+      attachedMesh: options?.attachedMesh,
+      normal: options?.normal?.clone() ?? new Vector3(0, -1, 0) // Salva il 'normal', fallback verso il basso
     };
 
     this.sensors.set(id, sensor);
@@ -401,23 +413,55 @@ export class HeatmapService {
   }
 
   // Configuration
+  // --- MODIFICA --- (Fix 1: Gestione robusta della visibilità e config)
   setConfig(config: Partial<HeatmapConfig>): void {
+    const oldVisible = this.config.visible;
+    const oldMode = this.config.mode;
+
     Object.assign(this.config, config);
-    if (config.colorStops) {
-      this.targetMeshes.forEach(({ shaderManager }) => {
-        shaderManager.dispose();
-      });
-      this.targetMeshes.clear();
-      this.isDirty = true;
+
+    // Gestione cambio visibilità
+    if (config.visible !== undefined && config.visible !== oldVisible) {
+      this.logger.info(`Heatmap visibility changed to: ${config.visible}`);
+      if (config.visible) {
+        // Applica i materiali heatmap
+        this.targetMeshes.forEach(({ mesh, shaderManager }) => {
+          mesh.material = shaderManager.getMaterial();
+        });
+        this.isDirty = true;
+        this.updateStrategyImmediate(); // Forza update se ri-abilitato
+      } else {
+        // Ripristina i materiali originali
+        this.targetMeshes.forEach(({ mesh, originalMaterial }) => {
+          mesh.material = originalMaterial;
+        });
+      }
     }
-    if (config.mode !== undefined) {
+
+    // Gestione cambio colorStops o textureSize (richiede ricreazione)
+    if (config.colorStops || config.textureSize) {
+      this.logger.info('Heatmap config changed, recreation required.');
+      // Rimuovi i vecchi manager e ripristina i materiali
+      this.targetMeshes.forEach(({ mesh, shaderManager, originalMaterial }) => {
+        shaderManager.dispose();
+        if (mesh) { // Controlla se mesh esiste ancora
+            mesh.material = originalMaterial;
+        }
+      });
+      this.targetMeshes.clear(); // Svuota la mappa
+      this.isDirty = true; // Forza updateTargetMeshes a ricrearli
+    }
+
+    // Gestione cambio modalità
+    if (config.mode !== undefined && config.mode !== oldMode) {
+      this.logger.info(`Heatmap mode changed to: ${config.mode}`);
       this.updateStrategyImmediate();
     }
   }
 
   // Rendering
   render(): void {
-    if (!this.scene || !this.config.visible) return;
+    if (!this.scene || !this.config.visible) return; // Non fare nulla se non visibile
 
     const now = performance.now();
     if (!this.isDirty && (now - this.lastRenderTime) < this.renderThrottle) return;
@@ -443,38 +487,57 @@ export class HeatmapService {
     });
   }
 
+  // --- MODIFICA --- (Fix 1 & 3: Logica di applicazione/rimozione materiale e raycast)
   private updateTargetMeshes(): void {
+    if (!this.scene) return;
+    
     const currentTargetIds = new Set<string>();
 
     for (const sensor of this.sensors.values()) {
       if (!sensor.enabled) continue;
 
-      // Raycast down to find target mesh
-      const ray = new Ray(sensor.position, new Vector3(0, -1, 0));
-      const hit = this.scene!.pickWithRay(ray, (mesh) => mesh !== sensor.attachedMesh);
+      // MODIFICA (Fix 3): Usa il 'normal' del sensore per il raycast
+      // Il 'normal' punta fuori dalla superficie, quindi invertiamo la direzione per trovare la mesh
+      const rayDirection = sensor.normal ? sensor.normal.scale(-1) : new Vector3(0, -1, 0); 
+      const ray = new Ray(sensor.position, rayDirection, 100); // Aumenta lunghezza raggio per sicurezza
+
+      const hit = this.scene!.pickWithRay(ray, (mesh) => 
+          mesh !== sensor.attachedMesh && mesh.isPickable && mesh.isVisible
+      );
 
       if (hit?.hit && hit.pickedMesh) {
         const meshId = hit.pickedMesh.id;
         currentTargetIds.add(meshId);
 
         if (!this.targetMeshes.has(meshId)) {
+          this.logger.info(`[HeatmapService] New target mesh found: ${meshId}`);
           const shaderManager = new ShaderManager(this.scene!, this.config.textureSize, this.config.colorStops);
-          hit.pickedMesh.material = shaderManager.getMaterial();
-          this.targetMeshes.set(meshId, { mesh: hit.pickedMesh, shaderManager });
+          const originalMaterial = hit.pickedMesh.material; // MODIFICA (Fix 1): Salva l'originale
+          
+          if (this.config.visible) { // MODIFICA (Fix 1): Applica solo se la visibilità globale è attiva
+            hit.pickedMesh.material = shaderManager.getMaterial();
+          }
+          
+          this.targetMeshes.set(meshId, { mesh: hit.pickedMesh, shaderManager, originalMaterial });
+          this.isDirty = true; // Forza un render della texture
         }
       }
     }
 
-    // Remove unused target meshes
-    for (const [meshId, { mesh, shaderManager }] of this.targetMeshes) {
+    // Rimuovi unused target meshes
+    for (const [meshId, { mesh, shaderManager, originalMaterial }] of this.targetMeshes) {
       if (!currentTargetIds.has(meshId)) {
-        // Restore original material if possible
-        mesh.material = null;
+        this.logger.info(`[HeatmapService] Removing target mesh: ${meshId}`);
+        // MODIFICA (Fix 1): Ripristina l'originale
+        if (mesh) { // Controlla se mesh esiste ancora
+            mesh.material = originalMaterial; 
+        }
         shaderManager.dispose();
         this.targetMeshes.delete(meshId);
       }
     }
   }
+
 
   private computeHeatmap(targetMesh: AbstractMesh, context: HeatmapContext): number[][] {
     const size = this.config.textureSize;
@@ -485,25 +548,38 @@ export class HeatmapService {
     const height = bounds.maximum.y - bounds.minimum.y;
     const depth = bounds.maximum.z - bounds.minimum.z;
 
+    // Scegli i due assi maggiori per la proiezione (logica originale)
     const dimensions = [
       { name: 'x', size: width, min: bounds.minimum.x, max: bounds.maximum.x },
       { name: 'y', size: height, min: bounds.minimum.y, max: bounds.maximum.y },
       { name: 'z', size: depth, min: bounds.minimum.z, max: bounds.maximum.z }
     ].sort((a, b) => b.size - a.size);
 
-    const dim1 = dimensions[0];
-    const dim2 = dimensions[1];
+    const dim1 = dimensions[0]; // Asse U della texture (es. X)
+    const dim2 = dimensions[1]; // Asse V della texture (es. Z)
+    // L'asse 3 (dim3) è quello con estensione minore, su cui proiettiamo
+
+    // NOTA: Questa logica di proiezione planare basata sui bounding box
+    // funzionerà male per mesh complesse. Il prototipo (heatmap.ts)
+    // funzionava perché la mesh era un piano (dim3.size era 0).
+    // Per un CAD 3D, sarebbe necessaria una proiezione UVW reale
+    // o un approccio basato sui vertici della mesh.
+    // Per ora, manteniamo la logica esistente.
 
     for (let y = 0; y < size; y++) {
       const row: number[] = [];
       for (let x = 0; x < size; x++) {
-        const u = x / (size - 1);
-        const v = y / (size - 1);
+        const u = x / (size - 1); // 0-1
+        const v = y / (size - 1); // 0-1
 
+        // Coordinate nel piano 2D (dim1, dim2)
         const coord1 = dim1.min + u * dim1.size;
         const coord2 = dim2.min + v * dim2.size;
-        const coord3 = (dim1.name === 'z' ? dim2.min + v * dim2.size : (dim1.name === 'y' ? dim2.min + v * dim2.size : bounds.minimum.z + depth / 2));
+        
+        // Coordinata fissa sull'asse 3 (centro del bounding box su quell'asse)
+        const coord3 = (dimensions[2].min + dimensions[2].max) / 2; 
 
+        // Ricomponi il Vector3 in coordinate world
         const point = new Vector3(
           dim1.name === 'x' ? coord1 : (dim2.name === 'x' ? coord2 : coord3),
           dim1.name === 'y' ? coord1 : (dim2.name === 'y' ? coord2 : coord3),
@@ -526,12 +602,13 @@ export class HeatmapService {
     return data;
   }
 
+  // --- MODIFICA --- (Fix 2: Restituisci istanze persistenti)
   private getStrategy(): HeatmapStrategy {
-    return this.config.mode === 'signal' ? new SignalStrategy() : new BatteryStrategy();
+    return this.config.mode === 'signal' ? this.signalStrategy : this.batteryStrategy;
   }
 
   private updateStrategyImmediate(): void {
-    if (!this.config.visible) return;
+    if (!this.config.visible) return; // Non aggiornare la strategia se la heatmap non è visibile
 
     const context: HeatmapContext = {
       sensors: Array.from(this.sensors.values()),
@@ -547,16 +624,19 @@ export class HeatmapService {
   private subscribeToEvents(): void {
     this.eventBus.heatmapVisibilityChanged$.subscribe((payload: HeatmapVisibilityChangedPayload) => {
       this.setConfig({ visible: payload.visible });
-      this.logger.info(`Heatmap visibility changed: ${payload.visible}`);
+      // this.logger.info(`Heatmap visibility changed: ${payload.visible}`);
     });
 
     this.eventBus.heatmapModeChanged$.subscribe((payload: HeatmapModeChangedPayload) => {
       this.setConfig({ mode: payload.mode });
-      this.logger.info(`Heatmap mode changed: ${payload.mode}`);
+      // this.logger.info(`Heatmap mode changed: ${payload.mode}`);
     });
 
+    // --- MODIFICA --- (Fix 3: Passa il 'normal' quando crei il sensore)
     this.eventBus.sensorCreated$.subscribe((payload: SensorCreatedPayload) => {
-      this.addSensor(payload.sensor.id, payload.sensor.position);
+      this.addSensor(payload.sensor.id, payload.sensor.position, {
+        normal: payload.sensor.normal // Passa il 'normal'
+      });
     });
 
     this.eventBus.sensorLinkRequested$.subscribe((payload: SensorLinkRequestedPayload) => {

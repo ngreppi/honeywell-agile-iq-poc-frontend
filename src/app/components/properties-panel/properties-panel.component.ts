@@ -107,6 +107,12 @@ export class PropertiesPanelComponent implements OnInit {
         this.selectedSensor.set(null);
       }
     });
+
+    // --- MODIFICA ---
+    // Emetti lo stato iniziale per sincronizzare il servizio heatmap
+    this.eventBus.emitHeatmapVisibilityChanged({ visible: this.heatmapVisible() });
+    this.eventBus.emitHeatmapModeChanged({ mode: this.heatmapMode() });
+    // --- FINE MODIFICA ---
   }
 
   // Layer toggle handlers
@@ -264,4 +270,3 @@ export class PropertiesPanelComponent implements OnInit {
   }
 
 }
-
