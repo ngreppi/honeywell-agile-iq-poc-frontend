@@ -1,0 +1,36 @@
+<div class="scene-canvas-container">
+  <!-- Main canvas -->
+  <canvas
+    #sceneCanvas
+    class="scene-canvas"
+    tabindex="-1"
+  ></canvas>
+
+  <!-- Loading/Error overlay -->
+  @if (isInitializing() || errorMessage()) {
+    <div class="scene-overlay">
+      @if (isInitializing()) {
+        <div class="loading-indicator">
+          <div class="message">🚀 Initializing 3D Engine...</div>
+          <div class="sub-message">Please wait while we set up the scene</div>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="error-indicator">
+          <div class="message">❌ Initialization Failed</div>
+          <div class="sub-message">{{ errorMessage() }}</div>
+          <div class="hint">Check the console for more details</div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Debug info (development only) -->
+  @if (isReady() && !isProduction()) {
+    <div class="debug-info">
+      Scene Ready | Engine: Babylon.js
+    </div>
+  }
+</div>
+

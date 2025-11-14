@@ -1,0 +1,10 @@
+<div class="canvas-2d-container">
+  <canvas #canvas2d class="canvas-2d"></canvas>
+
+  @if (!isReady()) {
+  <div class="canvas-loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Initializing 2D Canvas...</div>
+  </div>
+  }
+</div>

@@ -1,0 +1,262 @@
+// Command Panel - Modern Professional Design
+
+.command-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(145deg, #2a2a2a 0%, #242424 100%);
+  border: none;
+  border-radius: 0;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+.command-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Form Elements
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ccc;
+    margin-bottom: 2px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 0;
+    color: #ffffff;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border: 1px solid #0ea5e9;
+    }
+  }
+
+  input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+  }
+}
+
+// Command Select
+.command-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-radius: 0;
+  color: #ffffff;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(14, 165, 233, 0.3);
+  }
+
+  option {
+    background: #1a1a1a;
+    color: #ffffff;
+    padding: 8px;
+  }
+}
+
+// Edit Mode Toggle
+.edit-mode-toggle {
+  display: flex;
+  gap: 0;
+  background: #1a1a1a;
+  border-radius: 0;
+  padding: 2px;
+  border: 1px solid #3e3e3e;
+}
+
+.mode-button {
+  flex: 1;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &.active {
+    background: #0ea5e9;
+    color: #ffffff;
+  }
+
+  &:hover:not(.active) {
+    background: #2a2a2a;
+    color: #ccc;
+  }
+}
+
+// Edit Content
+.edit-content {
+  min-height: 200px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  border-radius: 0;
+}
+
+// Parameter Inputs
+.parameter-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// JSON Editor
+.json-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ccc;
+  }
+}
+
+.json-input {
+  width: 100%;
+  padding: 12px;
+  background: #0f0f0f;
+  border: none;
+  border-radius: 0;
+  color: #ffffff;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: none;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border: 1px solid #0ea5e9;
+  }
+
+  &.error {
+    border: 1px solid #ef4444;
+  }
+}
+
+.json-error {
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 0;
+  color: #fecaca;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+// Execute Section
+.execute-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  padding-bottom: 8px;
+  border-top: 1px solid #3e3e3e;
+}
+
+.execute-button {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+  background: #0ea5e9;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  outline: none;
+
+  &:hover:not(:disabled) {
+    background: #0284c7;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #666;
+
+    &:hover {
+      background: #666;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .command-panel {
+    min-width: 260px;
+    max-width: 300px;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .edit-content {
+    min-height: 180px;
+    padding: 12px;
+  }
+
+  .json-input {
+    font-size: 11px;
+  }
+}
+

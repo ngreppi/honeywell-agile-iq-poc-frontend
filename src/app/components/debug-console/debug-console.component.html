@@ -1,0 +1,84 @@
+<div class="debug-console" [style.height.px]="height">
+  <!-- Header -->
+  <div class="debug-header">
+    <div class="header-left">
+      <span class="title">Debug Console</span>
+      <span class="entry-count">{{ logs().length }} entries</span>
+    </div>
+
+    <div class="header-right">
+      <label class="auto-scroll-label">
+        <input
+          type="checkbox"
+          [(ngModel)]="isAutoScroll"
+          [ngModelOptions]="{standalone: true}"
+        />
+        Auto-scroll
+      </label>
+
+      <button
+        (click)="copyAllLogs()"
+        [disabled]="logs().length === 0"
+        class="debug-button"
+      >
+        Copy All
+      </button>
+
+      <button
+        (click)="handleClear()"
+        class="debug-button secondary"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Log entries -->
+  <div class="log-entries" (scroll)="handleScroll($event)">
+    @if (logs().length === 0) {
+      <div class="empty-state">
+        No log entries. Execute commands or interact with the 3D scene to see activity.
+      </div>
+    } @else {
+      @for (log of logs(); track log.id) {
+        <div
+          class="log-entry"
+          [style.border-left-color]="getLogColor(log.level)"
+          [class.has-error]="log.level === 'error'"
+        >
+          <!-- Log header -->
+          <div
+            class="log-header"
+            (click)="copyLogToClipboard(log)"
+            title="Click to copy this log"
+          >
+            <span class="log-timestamp">{{ formatTimestamp(log.timestamp) }}</span>
+            <span class="log-level" [style.background-color]="getLogColor(log.level)">
+              {{ log.level.toUpperCase() }}
+            </span>
+            <span class="log-category">[{{ log.category }}]</span>
+            <span class="log-message">{{ log.message }}</span>
+
+            @if (hasData(log)) {
+              <span
+                class="data-toggle"
+                (click)="toggleLogExpansion(log.id); $event.stopPropagation()"
+                title="Click to expand data"
+              >
+                {{ isLogExpanded(log.id) ? '▼' : '▶' }} DATA
+              </span>
+            }
+          </div>
+
+          <!-- Expanded data section -->
+          @if (isLogExpanded(log.id) && hasData(log)) {
+            <div class="log-data">
+              <pre>{{ log.data | json }}</pre>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
+

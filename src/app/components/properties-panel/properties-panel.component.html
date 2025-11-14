@@ -1,0 +1,203 @@
+@if (isVisible()) {
+<div class="properties-panel">
+  <div class="panel-header">
+    <h2>Properties</h2>
+    <button class="close-button" (click)="onClosePanel()" aria-label="Close panel">×</button>
+  </div>
+
+  <div class="panel-content">
+    <div class="properties-section">
+      <h3 class="section-title">Active Mesh</h3>
+      @if (activeMesh()) {
+      <div class="subsection">
+        <h4 class="subsection-title">Name</h4>
+        <p>{{ activeMesh()?.name }}</p>
+      </div>
+      <div class="subsection">
+        <h4 class="subsection-title">Position</h4>
+        <p></p>
+        <p>X: {{ activeMesh()?.position?.x }}</p>
+        <p>Y: {{ activeMesh()?.position?.y }}</p>
+        <p>Z: {{ activeMesh()?.position?.z }}</p>
+      </div>
+      <div class="subsection">
+        <h4 class="subsection-title">Visibility</h4>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="meshVisible()"
+              (change)="onVisibilityToggle($any($event.target).checked)"
+            />
+            <span>Visible</span>
+          </label>
+        </div>
+      </div>
+      }
+    </div>
+
+    
+
+    <!-- Model Import Section -->
+    <div class="properties-section">
+      <h3 class="section-title">Model Import</h3>
+      <div class="subsection">
+        <button class="import-button" (click)="onImportButtonClick()">
+          Import 3D Model (.glb/.gltf)
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept=".glb,.gltf"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Global Properties Section -->
+    <div class="properties-section">
+      <h3 class="section-title">Global Properties</h3>
+
+      <!-- Show/Hide Layers -->
+      <div class="subsection">
+        <h4 class="subsection-title">Show/Hide Layers</h4>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="layers().floor1"
+              (change)="onLayerToggle('floor1', $any($event.target).checked)"
+            />
+            <span>Floor 1</span>
+          </label>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="layers().floor2"
+              (change)="onLayerToggle('floor2', $any($event.target).checked)"
+            />
+            <span>Floor 2</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Show/Hide Tags -->
+      <div class="subsection">
+        <h4 class="subsection-title">Show/Hide Tags</h4>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="tags().architecture"
+              (change)="onTagToggle('architecture', $any($event.target).checked)"
+            />
+            <span>Architecture</span>
+          </label>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="tags().systems"
+              (change)="onTagToggle('systems', $any($event.target).checked)"
+            />
+            <span>Systems</span>
+          </label>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="tags().forniture"
+              (change)="onTagToggle('forniture', $any($event.target).checked)"
+            />
+            <span>Forniture</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Heatmap Options -->
+      <div class="subsection">
+        <h4 class="subsection-title">Heatmap Options</h4>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="heatmapVisible()"
+              (change)="onHeatmapVisibilityToggle($any($event.target).checked)"
+            />
+            <span>Show Heatmap</span>
+          </label>
+        </div>
+        @if (heatmapVisible()) {
+        <div class="radio-group">
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="heatmap"
+              value="battery"
+              [checked]="heatmapMode() === 'battery'"
+              (change)="onHeatmapModeChange('battery')"
+            />
+            <span>Battery</span>
+          </label>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="heatmap"
+              value="signal"
+              [checked]="heatmapMode() === 'signal'"
+              (change)="onHeatmapModeChange('signal')"
+            />
+            <span>Signal</span>
+          </label>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Selection Properties Section -->
+    <div class="properties-section">
+      <h3 class="section-title">Selection Properties</h3>
+
+      <!-- Object Input -->
+      <div class="input-group">
+        <label class="input-label" for="object-input">Object</label>
+        <input
+          id="object-input"
+          type="text"
+          class="text-input"
+          [value]="selectionProperties().object"
+          (input)="onObjectChange($any($event.target).value)"
+        />
+      </div>
+
+      <!-- Material Select -->
+      <div class="input-group">
+        <label class="input-label" for="material-select">Material</label>
+        <select
+          id="material-select"
+          class="select-input"
+          [value]="selectionProperties().material"
+          (change)="onMaterialChange($any($event.target).value)"
+        >
+          @for (material of materialOptions; track material) {
+          <option [value]="material">{{ material }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Attenuation Index Input -->
+      <div class="input-group">
+        <label class="input-label" for="attenuation-input">Attenuation Index</label>
+        <input
+          id="attenuation-input"
+          type="number"
+          class="number-input"
+          step="0.1"
+          [value]="selectionProperties().attenuationIndex"
+          (input)="onAttenuationChange(parseFloat($any($event.target).value))"
+        />
+      </div>
+    </div>
+    
+  </div>
+</div>
+}

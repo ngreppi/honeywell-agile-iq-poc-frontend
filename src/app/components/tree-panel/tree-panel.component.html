@@ -1,0 +1,289 @@
+<div class="tree-panel">
+  <div class="panel-header">
+    <h3>Scene Tree</h3>
+  </div>
+
+  <div class="panel-content">
+    <!-- Sensor Distance Calculation Mode Section -->
+    @if (isInSensorDistanceMode()) {
+    <div class="tree-section distance-mode">
+      <h4 class="section-title">Distance Calculation Mode</h4>
+      <div class="distance-mode-info">
+        <p class="distance-message">
+          <strong>Calculating distance between sensors</strong>
+        </p>
+        <p class="distance-instructions">
+          Click on 2 sensors to calculate distance and find intersected meshes.
+          <br>
+          Selected: {{ distanceModeSensors().length }}/2
+        </p>
+        <button
+          class="exit-distance-button"
+          (click)="onExitSensorDistanceMode()"
+          title="Exit distance calculation mode"
+        >
+          Exit Distance Mode
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Sensor Link Mode Section -->
+    @if (isInSensorLinkMode()) {
+    <div class="tree-section link-mode">
+      <h4 class="section-title">Sensor Link Mode</h4>
+      <div class="link-mode-info">
+        <p class="link-message">
+          <strong>Link Type: {{ selectedLinkType() === 'primary' ? 'Primario' : 'Secondario' }}</strong>
+        </p>
+        <p class="link-instructions">
+          Click on sensors to create a {{ selectedLinkType() === 'primary' ? 'blue' : 'pink' }} link.
+          <br>
+          Selected: {{ linkModeSensors().length }}/2
+        </p>
+        <button
+          class="exit-link-button"
+          (click)="onExitSensorLinkMode()"
+          title="Exit sensor link mode"
+        >
+          Exit Link Mode
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Sensor Creation Section -->
+    @if (isInSensorInsertionMode()) {
+    <div class="tree-section insertion-mode">
+      <h4 class="section-title">Sensor Insertion Mode</h4>
+      <div class="insertion-mode-info">
+        <p class="insertion-message">
+          <strong>Inserting: {{ getSensorDisplayName(selectedSensorType()!) }}</strong>
+        </p>
+        <p class="insertion-instructions">
+          Click on meshes to place sensors. Drag to rotate camera.
+        </p>
+        <button
+          class="exit-insertion-button"
+          (click)="onExitSensorInsertionMode()"
+          title="Exit sensor insertion mode"
+        >
+          Exit Insertion Mode
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div class="tree-section">
+      <h4 class="section-title">Create Sensors</h4>
+      <div class="sensor-creation">
+        @if (activeMesh()) {
+        <p class="selected-mesh">Selected: <strong>{{ activeMesh()?.name }}</strong></p>
+        } @else {
+        <p class="no-selection-message">Click on sensor type to start placement mode</p>
+        }
+        <div class="sensor-buttons">
+          <button
+            class="sensor-button proximity-sensor"
+            (click)="onCreateSensor('proximity')"
+            title="Proximity Sensor - Omnidirectional sphere (5m range)"
+          >
+            Proximity
+          </button>
+          <button
+            class="sensor-button motion-sensor"
+            (click)="onCreateSensor('motion')"
+            title="Motion Sensor - Directional cone (10m range, 60°)"
+          >
+            Motion
+          </button>
+          <button
+            class="sensor-button temperature-sensor"
+            (click)="onCreateSensor('temperature')"
+            title="Temperature Sensor - Cylindrical area (3m range, 2m height)"
+          >
+            Temperature
+          </button>
+          <button
+            class="sensor-button camera-sensor"
+            (click)="onCreateSensor('camera')"
+            title="Camera Sensor - Frustum view (15m range, 45° FOV)"
+          >
+            Camera
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Sensors List Section -->
+    @if (sensors().length > 0) {
+    <div class="tree-section">
+      <h4 class="section-title">Sensors ({{ sensors().length }})</h4>
+      <div class="sensors-list">
+        @for (sensor of sensors(); track sensor.id) {
+        <div
+          class="sensor-item"
+          (click)="onSensorClick(sensor)"
+          [title]="'Created at ' + sensor.meshName + ' on ' + (sensor.createdAt | date : 'short')"
+        >
+          <div class="sensor-info">
+            <div class="sensor-type" [class]="sensor.type + '-sensor'">
+              {{ getSensorDisplayName(sensor.type) }}
+            </div>
+            <div class="sensor-details">
+              <span class="sensor-id">{{ sensor.id }}</span>
+              <span class="sensor-position">
+                ({{ sensor.position.x.toFixed(1) }}, {{ sensor.position.y.toFixed(1) }},
+                {{ sensor.position.z.toFixed(1) }})
+              </span>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      <div class="link-sensors-section">
+        <button
+          class="link-sensors-button distance"
+          (click)="onEnterSensorDistanceMode()"
+          [disabled]="sensors().length < 2 || isInSensorInsertionMode() || isInSensorLinkMode()"
+          title="Click on 2 sensors to calculate distance and find intersected meshes"
+        >
+          Calcola Distanza
+        </button>
+        <button
+          class="link-sensors-button primary"
+          (click)="onEnterSensorLinkMode(SensorLinkType.PRIMARY)"
+          [disabled]="sensors().length < 2 || isInSensorInsertionMode()"
+          title="Click on sensors in the 3D scene to create a primary (blue) link"
+        >
+          Link Primario
+        </button>
+        <button
+          class="link-sensors-button secondary"
+          (click)="onEnterSensorLinkMode(SensorLinkType.SECONDARY)"
+          [disabled]="sensors().length < 2 || isInSensorInsertionMode()"
+          title="Click on sensors in the 3D scene to create a secondary (pink) link"
+        >
+          Link Secondario
+        </button>
+        <button
+          class="link-sensors-button modal"
+          (click)="onLinkSensorsClick()"
+          [disabled]="sensors().length < 2 || isInSensorInsertionMode() || isInSensorLinkMode()"
+          title="Link two sensors using modal selection"
+        >
+          Link sensori (Modal)
+        </button>
+      </div>
+    </div>
+    }
+
+    @if (sensors().length === 0) {
+    <div class="tree-section">
+      <h4 class="section-title">Sensors</h4>
+      <p class="empty-message">No sensors created yet. Select a mesh and create sensors from the Properties panel.</p>
+    </div>
+    }
+  </div>
+</div>
+
+<!-- Link Sensors Modal -->
+@if (showLinkModal()) {
+<div class="modal-overlay" (click)="closeLinkModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Link Sensors</h3>
+      <button class="modal-close" (click)="closeLinkModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="sensor-selection">
+        <div class="input-group">
+          <label class="input-label" for="sensor1-select">First Sensor</label>
+          <select id="sensor1-select" class="select-input" [(ngModel)]="selectedSensor1">
+            <option value="">Select a sensor...</option>
+            @for (sensor of sensors(); track sensor.id) {
+            <option [value]="sensor.id">
+              {{ getSensorDisplayName(sensor.type) }} - {{ sensor.id }}
+            </option>
+            }
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="sensor2-select">Second Sensor</label>
+          <select id="sensor2-select" class="select-input" [(ngModel)]="selectedSensor2">
+            <option value="">Select a sensor...</option>
+            @for (sensor of sensors(); track sensor.id) { @if (sensor.id !== selectedSensor1) {
+            <option [value]="sensor.id">
+              {{ getSensorDisplayName(sensor.type) }} - {{ sensor.id }}
+            </option>
+            } }
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-button cancel" (click)="closeLinkModal()">Cancel</button>
+      <button
+        class="modal-button confirm"
+        (click)="confirmLinkSensors()"
+        [disabled]="!selectedSensor1 || !selectedSensor2"
+      >
+        Conferma
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Distance Result Modal -->
+@if (showDistanceResultModal() && distanceResult()) {
+<div class="modal-overlay" (click)="closeDistanceResultModal()">
+  <div class="modal-content distance-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Risultato Calcolo Distanza</h3>
+      <button class="modal-close" (click)="closeDistanceResultModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="distance-result-section">
+        <h4>Sensori Selezionati</h4>
+        <div class="sensor-pair">
+          <div class="sensor-detail">
+            <strong>Sensore 1:</strong> {{ distanceResult()!.sensor1.id }}
+            <br>
+            <small>{{ getSensorDisplayName(distanceResult()!.sensor1.type) }}</small>
+          </div>
+          <div class="sensor-detail">
+            <strong>Sensore 2:</strong> {{ distanceResult()!.sensor2.id }}
+            <br>
+            <small>{{ getSensorDisplayName(distanceResult()!.sensor2.type) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="distance-result-section">
+        <h4>Distanza</h4>
+        <div class="distance-value">
+          {{ distanceResult()!.distance.toFixed(3) }} unità
+        </div>
+      </div>
+      <div class="distance-result-section">
+        <h4>Mesh Attraversate ({{ distanceResult()!.intersectedMeshes.length }})</h4>
+        @if (distanceResult()!.intersectedMeshes.length > 0) {
+        <div class="intersected-meshes-list">
+          @for (meshName of distanceResult()!.intersectedMeshes; track meshName) {
+          <div class="mesh-item">
+            <span class="mesh-icon">📦</span>
+            <span class="mesh-name">{{ meshName }}</span>
+          </div>
+          }
+        </div>
+        } @else {
+        <p class="no-meshes-message">Nessuna mesh attraversata dalla linea diretta tra i sensori.</p>
+        }
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-button confirm" (click)="closeDistanceResultModal()">Chiudi</button>
+    </div>
+  </div>
+</div>
+}

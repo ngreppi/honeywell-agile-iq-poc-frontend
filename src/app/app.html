@@ -1,0 +1,79 @@
+<!-- Pittway3D Angular Application -->
+
+<!-- Error State -->
+@if (initError()) {
+<div class="app-error">
+  <div class="error-content">
+    <h2>Initialization Failed</h2>
+    <p>{{ initError() }}</p>
+    <button (click)="reloadPage()">Reload Page</button>
+  </div>
+</div>
+}
+
+<!-- Loading State -->
+@else if (!isInitialized()) {
+<div class="app-loading">
+  <div class="loading-content">
+    <div class="loading-message">Initializing Pittway3D Template...</div>
+    <div class="loading-sub">Setting up command system and 3D engine</div>
+  </div>
+</div>
+}
+
+<!-- Main App Layout -->
+@else {
+<div class="app">
+  <!-- Main Content Area -->
+  <div class="main-layout" [class.properties-panel-hidden]="!propertiesPanelVisible()">
+    <!-- Left Panel - Tree Panel -->
+    <div class="left-panel">
+      <app-tree-panel />
+    </div>
+
+    <!-- Center Panel - 3D Canvas -->
+    <div class="canvas-panel">
+      <!-- 3D Canvas Mode - Always rendered but hidden/shown via CSS -->
+      <app-scene-canvas
+        [class.canvas-hidden]="currentMode() !== '3d'"
+        [engineConfig]="{ antialias: true, adaptToDeviceRatio: true }"
+        (sceneReady)="handleSceneReady()"
+        (error)="handleSceneError($event)"
+      />
+
+      <!-- 2D Canvas Mode - Always rendered but hidden/shown via CSS -->
+      @if (is2DEabled()) {
+      <app-engine-2d
+        [class.canvas-hidden]="currentMode() !== '2d'"
+        (canvasReady)="handle2DCanvasReady()"
+        (error)="handleSceneError($event)"
+      />
+      }
+    </div>
+
+    <!-- Right Panel - Properties -->
+    @if (propertiesPanelVisible()) {
+    <div class="right-panel">
+      <app-properties-panel />
+    </div>
+    } @else {
+    <!-- Properties Panel Toggle Button (when panel is closed) -->
+    <div class="panel-toggle">
+      <button class="toggle-button" (click)="showPropertiesPanel()" title="Show Properties Panel">
+        <span>Properties</span>
+        <span class="arrow">◀</span>
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- Bottom Section - Debug Console -->
+  @if (!isProduction() ) {
+  <div class="debug-panel">
+    <app-debug-console [initialHeight]="200" [maxEntries]="100" />
+  </div>
+  }
+</div>
+}
+
+<router-outlet />

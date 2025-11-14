@@ -1,0 +1,138 @@
+<div class="command-panel">
+  <div class="command-panel-content">
+    <!-- Command Type Dropdown -->
+    <div class="form-group">
+      <label>Command Type:</label>
+      <select
+        [ngModel]="selectedCommand()"
+        (ngModelChange)="onCommandTypeChange($event)"
+        class="command-select"
+      >
+        @for (type of commandTypes; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Edit Mode Toggle -->
+    <div class="edit-mode-toggle">
+      <button
+        [class.active]="editMode() === 'parameters'"
+        (click)="onEditModeChange('parameters')"
+        class="mode-button"
+      >
+        Parameters
+      </button>
+      <button
+        [class.active]="editMode() === 'json'"
+        (click)="onEditModeChange('json')"
+        class="mode-button"
+      >
+        Raw JSON
+      </button>
+    </div>
+
+    <!-- Dynamic Content Based on Edit Mode -->
+    <div class="edit-content">
+      @if (editMode() === 'parameters') {
+        <div class="parameter-inputs">
+          <!-- Mesh Name -->
+          <div class="form-group">
+            <label>Target Mesh:</label>
+            <input
+              type="text"
+              [ngModel]="currentPayload().meshName"
+              (ngModelChange)="onParameterChange('meshName', $event)"
+              placeholder="mainCube"
+            />
+          </div>
+
+          <!-- X, Y, Z Coordinates -->
+          <div class="form-group">
+            <label>X:</label>
+            <input
+              type="number"
+              [ngModel]="currentPayload().x"
+              (ngModelChange)="onParameterChange('x', parseFloatValue($event))"
+              step="0.1"
+            />
+          </div>
+          <div class="form-group">
+            <label>Y:</label>
+            <input
+              type="number"
+              [ngModel]="currentPayload().y"
+              (ngModelChange)="onParameterChange('y', parseFloatValue($event))"
+              step="0.1"
+            />
+          </div>
+          <div class="form-group">
+            <label>Z:</label>
+            <input
+              type="number"
+              [ngModel]="currentPayload().z"
+              (ngModelChange)="onParameterChange('z', parseFloatValue($event))"
+              step="0.1"
+            />
+          </div>
+
+          <!-- Command-specific parameters -->
+          @if (selectedCommand() === CommandType.TRANSLATE || selectedCommand() === CommandType.ROTATE) {
+            <div class="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  [ngModel]="getCheckboxValue('relative')"
+                  (ngModelChange)="onParameterChange('relative', $event)"
+                />
+                Relative Movement
+              </label>
+            </div>
+          }
+
+          @if (selectedCommand() === CommandType.SCALE) {
+            <div class="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  [ngModel]="getCheckboxValue('uniform')"
+                  (ngModelChange)="onParameterChange('uniform', $event)"
+                />
+                Uniform Scale (use only X value)
+              </label>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="json-editor">
+          <label>JSON Payload:</label>
+          <textarea
+            [ngModel]="jsonText()"
+            (ngModelChange)="onJsonChange($event)"
+            placeholder="Enter JSON payload..."
+            rows="8"
+            [class.error]="jsonError()"
+            class="json-input"
+          ></textarea>
+          @if (jsonError()) {
+            <div class="json-error">
+              {{ jsonError() }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Execute Button -->
+    <div class="execute-section">
+      <button
+        (click)="onExecute()"
+        [disabled]="!canExecute()"
+        class="execute-button"
+      >
+        {{ buttonText() }}
+      </button>
+    </div>
+  </div>
+</div>
+

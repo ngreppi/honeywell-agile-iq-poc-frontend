@@ -1,0 +1,867 @@
+.tree-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg, #2a2a2a);
+  border-right: 1px solid var(--border-color, #444);
+  color: #e0e0e0;
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color, #444);
+    background: var(--header-bg, #1e1e1e);
+
+    h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-color, #ffffff);
+    }
+  }
+
+  .panel-content {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #1e1e1e;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+}
+
+// Tree section styles
+.tree-section {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  // Special styling for insertion mode
+  &.insertion-mode {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  // Special styling for link mode
+  &.link-mode {
+    background-color: rgba(106, 76, 147, 0.1);
+    border: 1px solid rgba(106, 76, 147, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  // Special styling for distance mode
+  &.distance-mode {
+    background-color: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+}
+
+.section-title {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4a9eff;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+// Empty message styles
+.empty-message {
+  color: #888;
+  font-style: italic;
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+// Sensor creation styles
+.sensor-creation {
+  .selected-mesh {
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    margin: 0 0 1rem 0;
+    padding: 0.5rem;
+    background-color: #333;
+    border-radius: 4px;
+    border-left: 3px solid #4a9eff;
+
+    strong {
+      color: #e0e0e0;
+    }
+  }
+
+  .no-selection-message {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0 0 1rem 0;
+    padding: 0.5rem;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    border-left: 3px solid #666;
+    font-style: italic;
+    text-align: center;
+  }
+}
+
+// Sensor button styles
+.sensor-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.sensor-button {
+  padding: 0.75rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 2px;
+  }
+
+  // Sensor type specific colors based on the guide
+  &.proximity-sensor {
+    background: linear-gradient(135deg, #00FF00, #00CC00);
+    color: #000;
+
+    &:hover {
+      background: linear-gradient(135deg, #00E600, #00B300);
+    }
+  }
+
+  &.motion-sensor {
+    background: linear-gradient(135deg, #FF6600, #E55A00);
+    color: #fff;
+
+    &:hover {
+      background: linear-gradient(135deg, #E55A00, #CC5000);
+    }
+  }
+
+  &.temperature-sensor {
+    background: linear-gradient(135deg, #FF0000, #E60000);
+    color: #fff;
+
+    &:hover {
+      background: linear-gradient(135deg, #E60000, #CC0000);
+    }
+  }
+
+  &.camera-sensor {
+    background: linear-gradient(135deg, #0066FF, #0052CC);
+    color: #fff;
+
+    &:hover {
+      background: linear-gradient(135deg, #0052CC, #0047B3);
+    }
+  }
+}
+
+// Sensors list styles
+.sensors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
+.sensor-item {
+  padding: 0.75rem;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow-x: hidden;
+
+  &:hover {
+    background-color: #333;
+    border-color: #555;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  &.active {
+    background-color: #3a4a5c;
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.sensor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sensor-type {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  width: fit-content;
+
+  // Sensor type specific colors
+  &.proximity-sensor {
+    background-color: rgba(0, 255, 0, 0.2);
+    color: #00FF00;
+    border: 1px solid rgba(0, 255, 0, 0.4);
+  }
+
+  &.motion-sensor {
+    background-color: rgba(255, 102, 0, 0.2);
+    color: #FF6600;
+    border: 1px solid rgba(255, 102, 0, 0.4);
+  }
+
+  &.temperature-sensor {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #FF6666;
+    border: 1px solid rgba(255, 0, 0, 0.4);
+  }
+
+  &.camera-sensor {
+    background-color: rgba(0, 102, 255, 0.2);
+    color: #4a9eff;
+    border: 1px solid rgba(0, 102, 255, 0.4);
+  }
+}
+
+.sensor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #b0b0b0;
+}
+
+.sensor-id {
+  font-family: 'Courier New', monospace;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.sensor-position {
+  color: #888;
+  font-style: italic;
+}
+
+// Link sensors section styles
+.link-sensors-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// Link sensors button styles
+.link-sensors-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.primary {
+    background: linear-gradient(135deg, #0066FF, #0052CC);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0052CC, #0047B3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 102, 255, 0.4);
+    }
+  }
+
+  &.secondary {
+    background: linear-gradient(135deg, #FF4081, #E91E63);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #E91E63, #C2185B);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(255, 64, 129, 0.4);
+    }
+  }
+
+  &.modal {
+    background-color: #6a4c93;
+
+    &:hover:not(:disabled) {
+      background-color: #5a3d83;
+    }
+  }
+
+  &.distance {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #F57C00, #E65100);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(255, 152, 0, 0.4);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background: #444 !important;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+// Modal styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #444;
+    color: #fff;
+  }
+
+  &:focus {
+    outline: 2px solid #4a9eff;
+    outline-offset: 2px;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: #333;
+  border-top: 1px solid #444;
+}
+
+.modal-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.cancel {
+    background-color: #666;
+    color: #fff;
+
+    &:hover {
+      background-color: #777;
+    }
+
+    &:focus {
+      outline: 2px solid #666;
+      outline-offset: 2px;
+    }
+  }
+
+  &.confirm {
+    background-color: #4a9eff;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background-color: #3a8eef;
+    }
+
+    &:focus {
+      outline: 2px solid #4a9eff;
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      background-color: #444;
+      color: #888;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Input group styles for modal
+.input-group {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #b0b0b0;
+}
+
+.select-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e0e0e0' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+
+  &:focus {
+    outline: none;
+    border-color: #4a9eff;
+    background-color: #2d2d2d;
+  }
+
+  &:hover:not(:focus) {
+    border-color: #555;
+  }
+
+  option {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+  }
+}
+
+.sensor-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Insertion mode styles
+.insertion-mode-info {
+  .insertion-message {
+    font-size: 0.9rem;
+    color: #4CAF50;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+
+    strong {
+      color: #81C784;
+    }
+  }
+
+  .insertion-instructions {
+    font-size: 0.8rem;
+    color: #b0b0b0;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+  }
+}
+
+// Link mode styles
+.link-mode-info {
+  .link-message {
+    font-size: 0.9rem;
+    color: #9C27B0;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+
+    strong {
+      color: #BA68C8;
+    }
+  }
+
+  .link-instructions {
+    font-size: 0.8rem;
+    color: #b0b0b0;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+  }
+}
+
+.exit-link-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #d32f2f;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(244, 67, 54, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+.exit-insertion-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #d32f2f;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(244, 67, 54, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+// Distance mode styles
+.distance-mode-info {
+  .distance-message {
+    font-size: 0.9rem;
+    color: #FF9800;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+
+    strong {
+      color: #FFB74D;
+    }
+  }
+
+  .distance-instructions {
+    font-size: 0.8rem;
+    color: #b0b0b0;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+  }
+}
+
+.exit-distance-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #d32f2f;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(244, 67, 54, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+// Distance result modal styles
+.modal-content.distance-modal {
+  max-width: 600px;
+}
+
+.distance-result-section {
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4a9eff;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #444;
+  }
+}
+
+.sensor-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.sensor-detail {
+  padding: 0.75rem;
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #b0b0b0;
+
+  strong {
+    color: #e0e0e0;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  small {
+    color: #888;
+    font-style: italic;
+  }
+}
+
+.distance-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4CAF50;
+  padding: 1rem;
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 6px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.intersected-meshes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 4px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
+.mesh-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #333;
+    border-color: #555;
+  }
+
+  .mesh-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .mesh-name {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+  }
+}
+
+.no-meshes-message {
+  color: #888;
+  font-style: italic;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  border: 1px dashed #444;
+  border-radius: 4px;
+  margin: 0;
+}
